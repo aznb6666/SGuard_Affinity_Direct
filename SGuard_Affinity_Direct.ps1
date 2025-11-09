@@ -128,7 +128,7 @@ while ($true) {
         Start-Process powershell.exe "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
         exit
     }
-
+	"正在初始化......"
     Clear-Host
     $RawUI = $Host.UI.RawUI
     $RawUI.BufferSize = New-Object System.Management.Automation.Host.Size($RawUI.WindowSize.Width, $RawUI.WindowSize.Height)
@@ -181,3 +181,4 @@ while ($true) {
     }
 
 }
+
