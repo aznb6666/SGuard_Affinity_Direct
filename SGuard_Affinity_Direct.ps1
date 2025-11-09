@@ -35,7 +35,6 @@ powershell -NoP -C "Get-Process SGuardSvc64 | %%{$_.ProcessorAffinity = 0x80000L
     Set-Content -Path (Join-Path $script:Dir $Files[0]) -Value $BatContent64 -Encoding ASCII
     Set-Content -Path (Join-Path $script:Dir $Files[1]) -Value $BatContentSvc64 -Encoding ASCII
     Write-Host " ✅ bat文件已创建" -ForegroundColor Green
-    " 文件所在目录:`n$script:Dir #ACE程序所在目录"
 }
 
 function New-AffinityTask {
@@ -181,4 +180,5 @@ while ($true) {
     }
 
 }
+
 
