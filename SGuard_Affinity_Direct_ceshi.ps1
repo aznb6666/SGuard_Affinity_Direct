@@ -131,10 +131,15 @@ while ($true) {
     $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(60, 30)
 
     # 权限检测
+    if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    # 这里-string 把整段脚本源码当文本传过去
     $source = @'
 '@ + $MyInvocation.MyCommand.ScriptBlock.ToString() + @'
 '@
-	Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source -Verb RunAs -WindowStyle Normal
+    # 用 -Command 重新执行；加 -NoExit 方便调试，正式用可去掉
+    Start-Process powershell.exe -ArgumentList '-Command',$source -Verb RunAs
+    exit
+}
     Clear-Host
     "`n 获取脚本信息......"
     $Protocol   = "https:"
@@ -193,5 +198,6 @@ while ($true) {
 
 
 }
+
 
 
