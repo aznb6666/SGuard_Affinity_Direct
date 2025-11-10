@@ -131,7 +131,7 @@ while ($true) {
     $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(60, 30)
 
     # 权限检测
-   if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Start-Process powershell.exe "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
         exit
     }
@@ -191,6 +191,7 @@ while ($true) {
         '' { Do-CommonWork -Dir $Dir -Files $Files -Tasks $Tasks; break }  # 空输入默认安装/覆盖
     }
 
-
 }
+
+
 
