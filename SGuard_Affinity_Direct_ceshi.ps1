@@ -147,7 +147,10 @@ if ([Environment]::GetEnvironmentVariable($markName, 'User') -eq '1') {
     $source = @'
 '@ + $MyInvocation.MyCommand.ScriptBlock.ToString() + @'
 '@
-    Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source,"-oldPid $PID" -Verb RunAs -WindowStyle Normal
+	$source = @"
+	param([int]`$oldPid = $PID)
+"@ + $MyInvocation.MyCommand.ScriptBlock.ToString()
+	Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source -Verb RunAs -WindowStyle Normal
     exit
 }
 
