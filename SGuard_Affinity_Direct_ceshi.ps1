@@ -128,18 +128,30 @@ function Uninstall-Affinity {
 # ========== 主循环 ==========
 while ($true) {
     # 设置窗口大小
-    # 想设定的目标尺寸
-	$targetWidth  = 60
-	$targetHeight = 30
-
-	# 1. 先把缓冲区压到目标（窗口才能跟着缩小）
-	$buf = $Host.UI.RawUI.BufferSize
-	if ($buf.Width  -gt $targetWidth)  { $buf.Width  = $targetWidth  }
-	if ($buf.Height -gt $targetHeight) { $buf.Height = $targetHeight }
-	$Host.UI.RawUI.BufferSize = $buf        # 可能抛异常，try 一下更稳
-
-	# 2. 再改窗口本身
-	$Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size($targetWidth, $targetHeight)
+    $wantW = 60
+	$wantH = 30
+	
+	# 先尝试直接改（普通终端大概率能成）
+	try {
+	    $buf = $Host.UI.RawUI.BufferSize
+	    $win = $Host.UI.RawUI.WindowSize
+	    # 缓冲区必须 ≤ 目标，窗口才能 ≤ 目标
+	    if ($buf.Width -gt $wantW -or $buf.Height -gt $wantH) {
+	        $buf.Width  = $wantW
+	        $buf.Height = $wantH
+	        $Host.UI.RawUI.BufferSize = $buf
+	    }
+	    $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size($wantW, $wantH)
+	} catch {
+	    # 失败说明当前控制台不让改小 → 直接开一个 60×30 的新窗口继续跑脚本
+	    $code = $MyInvocation.MyCommand.ScriptBlock.ToString()
+	    # -NoExit 调试用，正式发版可去掉
+	    Start-Process powershell.exe -ArgumentList "-NoExit","-Command",$code `
+	                 -WindowStyle Normal `
+	                 -Verb ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)?'RunAs':'RunUser' `
+	                 -WorkingDirectory $PWD
+	    exit   # 老窗口直接退出，避免双窗口并存
+	}
 
     # 权限检测
     if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -206,5 +218,6 @@ while ($true) {
         }
         '' { Do-CommonWork -Dir $Dir -Files $Files -Tasks $Tasks; break }  # 空输入默认安装/覆盖
     }
+
 
 }
