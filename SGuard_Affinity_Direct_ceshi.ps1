@@ -1,3 +1,17 @@
+$markName = '_SGuard_NewWin'
+# 读 User 级变量（跨进程可见）
+if ([Environment]::GetEnvironmentVariable($markName, 'User') -eq '1') {
+	# 第二次进来：清掉标记，继续跑
+	[Environment]::SetEnvironmentVariable($markName, $null, 'User')
+} else {
+	# 第一次：写标记 → 起管理员窗 → 老进程退出
+	[Environment]::SetEnvironmentVariable($markName, '1', 'User')
+	$source = @'
+'@ + $MyInvocation.MyCommand.ScriptBlock.ToString() + @'
+'@
+	Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source -Verb RunAs -WindowStyle Normal
+	exit
+}
 function Show-Menu {
     param([string]$Exist)
     Clear-Host
@@ -130,21 +144,7 @@ while ($true) {
     # 设置窗口大小
     $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(60, 30)
 
-    # 权限检测
-	$markName = '_SGuard_NewWin'
-	# 读 User 级变量（跨进程可见）
-	if ([Environment]::GetEnvironmentVariable($markName, 'User') -eq '1') {
-	    # 第二次进来：清掉标记，继续跑
-	    [Environment]::SetEnvironmentVariable($markName, $null, 'User')
-	} else {
-	    # 第一次：写标记 → 起管理员窗 → 老进程退出
-	    [Environment]::SetEnvironmentVariable($markName, '1', 'User')
-	    $source = @'
-'@ + $MyInvocation.MyCommand.ScriptBlock.ToString() + @'
-'@
-	    Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source -Verb RunAs -WindowStyle Normal
-	    exit
-	}
+
     Clear-Host
     "`n 获取脚本信息......"
     $Protocol   = "https:"
@@ -202,3 +202,4 @@ while ($true) {
     }
 
 }
+
