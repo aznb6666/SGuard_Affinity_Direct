@@ -13,6 +13,8 @@ if ([Environment]::GetEnvironmentVariable($markName, 'User') -eq '1') {
 	Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source -Verb RunAs -WindowStyle Normal
 	exit
 }
+Clear-Host
+"`n 获取脚本信息......"
 function Show-Menu {
     param([string]$Exist)
     Clear-Host
@@ -146,8 +148,7 @@ while ($true) {
     
 
 
-    Clear-Host
-    "`n 获取脚本信息......"
+
     $Protocol   = "https:"
 	$Domain     = "//github.com"
 	$Owner      = "aznb6666"
@@ -203,5 +204,6 @@ while ($true) {
     }
 
 }
+
 
 
