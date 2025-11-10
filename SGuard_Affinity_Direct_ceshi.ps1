@@ -1,3 +1,4 @@
+param([int]$oldPid = 0)
 function Show-Menu {
     param([string]$Exist)
     Clear-Host
@@ -125,26 +126,35 @@ function Uninstall-Affinity {
     Read-Host "`n 按回车返回菜单"
 }
 
+$markName = "_SGuard_NewWin_$($oldPid ? $oldPid : $PID)"
+
+# 废变量清理（同前）
+Get-ChildItem Env: | Where-Object {
+    $_.Name -like '_SGuard_NewWin_*'
+} | ForEach-Object {
+    $pidInName = [int]($_.Name -split '_')[-1]
+    if ($pidInName -and -not (Get-Process -Id $pidInName -ErrorAction SilentlyContinue)) {
+        [Environment]::SetEnvironmentVariable($_.Name, $null, 'User')
+    }
+}
+
+if ([Environment]::GetEnvironmentVariable($markName, 'User') -eq '1') {
+    # 第二次进来：清变量 → 继续跑菜单
+    [Environment]::SetEnvironmentVariable($markName, $null, 'User')
+} elseif ($oldPid -eq 0) {
+    # 第一次：写变量 → 起管理员窗 → 把当前 PID 传进去 → 老进程退出
+    [Environment]::SetEnvironmentVariable($markName, '1', 'User')
+    $source = @'
+'@ + $MyInvocation.MyCommand.ScriptBlock.ToString() + @'
+'@
+    Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source,"-oldPid $PID" -Verb RunAs -WindowStyle Normal
+    exit
+}
+
 # ========== 主循环 ==========
 while ($true) {
     # 设置窗口大小
     $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(60, 30)
-
-    # 权限检测
-	$markName = '_SGuard_NewWin'
-	# 读 User 级变量（跨进程可见）
-	if ([Environment]::GetEnvironmentVariable($markName, 'User') -eq '1') {
-	    # 第二次进来：清掉标记，继续跑
-	    [Environment]::SetEnvironmentVariable($markName, $null, 'User')
-	} else {
-	    # 第一次：写标记 → 起管理员窗 → 老进程退出
-	    [Environment]::SetEnvironmentVariable($markName, '1', 'User')
-	    $source = @'
-'@ + $MyInvocation.MyCommand.ScriptBlock.ToString() + @'
-'@
-	    Start-Process powershell.exe -ArgumentList '-NoExit','-Command',$source -Verb RunAs -WindowStyle Normal
-	    exit
-	}
     Clear-Host
     "`n 获取脚本信息......"
     $Protocol   = "https:"
@@ -189,12 +199,14 @@ while ($true) {
                 Start-Process $repoUrl
             } else {
                 # 退出脚本
+				[Environment]::SetEnvironmentVariable("_SGuard_NewWin_$PID", $null, 'User')
                 Get-Process -Id $PID | Stop-Process -Force
             }
             break
         }
         '4' {
             if ($Exist -ieq "True") {
+				[Environment]::SetEnvironmentVariable("_SGuard_NewWin_$PID", $null, 'User')
                 Get-Process -Id $PID | Stop-Process -Force
             }
         }
@@ -202,6 +214,7 @@ while ($true) {
     }
 
 }
+
 
 
 
